@@ -1,0 +1,25 @@
+from pydantic import BaseModel, EmailStr
+
+
+class LoginRequest(BaseModel):
+    """Schema for login request."""
+    email: EmailStr
+    password: str
+
+
+class TokenResponse(BaseModel):
+    """Schema for token response."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class TokenRefreshRequest(BaseModel):
+    """Schema for token refresh request."""
+    refresh_token: str
+
+
+class AccessTokenResponse(BaseModel):
+    """Schema for access token response."""
+    access_token: str
+    token_type: str = "bearer"
