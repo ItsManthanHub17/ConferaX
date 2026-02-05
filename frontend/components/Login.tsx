@@ -8,8 +8,6 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  const [isSignup, setIsSignup] = useState(false);
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,9 +20,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setError(null);
     
     try {
-      const response = isSignup
-        ? await api.register({ name, email, password })
-        : await api.login({ email, password });
+      const response = await api.login({ email, password });
       onLoginSuccess(response);
     } catch (err: any) {
       setError(err.message || "Authentication Failure");
@@ -82,20 +78,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            {isSignup && (
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Full Name</label>
-                <input 
-                  type="text" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Firstname Lastname"
-                  className="w-full px-6 py-5 bg-[#0a0a0a] border border-white/5 focus:border-[#f59e0b] text-white rounded-2xl outline-none transition-all font-bold text-sm shadow-inner"
-                  required
-                />
-              </div>
-            )}
-
             <div className="space-y-2">
               <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Identity Endpoint</label>
               <input 
@@ -142,22 +124,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               disabled={isSubmitting}
               className="w-full h-16 btn-amber rounded-2xl active:scale-[0.98] disabled:opacity-50"
             >
-              {isSubmitting ? 'Establishing Link...' : (isSignup ? 'Create Identity' : 'Synchronize')}
+              {isSubmitting ? 'Establishing Link...' : 'Synchronize'}
             </button>
           </form>
-
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setError(null);
-              }}
-              className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-[#f59e0b] transition-colors"
-            >
-              {isSignup ? 'Already have access? Sign in' : 'New user? Create account'}
-            </button>
-          </div>
 
           {/* New Password Hint */}
           <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
