@@ -243,4 +243,20 @@ export const api = {
     await axiosInstance.delete(`/bookings/${id}`);
     return { status: "deleted", id };
   },
+
+  // Cleanup Management
+  getCleanupStatus: async () => {
+    const response = await axiosInstance.get('/admin/cleanup/status');
+    return response.data;
+  },
+
+  toggleCleanup: async (enabled: boolean) => {
+    const response = await axiosInstance.post(`/admin/cleanup/toggle?enabled=${enabled}`);
+    return response.data;
+  },
+
+  runCleanupNow: async () => {
+    const response = await axiosInstance.post('/admin/cleanup/run-now');
+    return response.data;
+  },
 };
