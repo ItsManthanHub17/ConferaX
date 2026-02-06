@@ -107,9 +107,14 @@ export const api = {
   },
 
   getUsers: async (): Promise<User[]> => {
-    // Note: Backend doesn't have a list users endpoint for non-admins
-    // This would need to be added or we fetch from bookings
-    return [];
+    const response = await axiosInstance.get('/users/');
+    return response.data.map((user: any) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=${user.role === 'ADMIN' ? 'f59e0b' : '6366f1'}&color=fff`
+    }));
   },
 
   createUser: async (userData: Partial<User> & { password?: string }): Promise<User> => {
@@ -129,8 +134,26 @@ export const api = {
     };
   },
 
+  updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
+    const updateData: any = {};
+    if (userData.name) updateData.name = userData.name;
+    if (userData.avatar) updateData.avatar = userData.avatar;
+    if (userData.role) updateData.role = userData.role;
+    
+    const response = await axiosInstance.put(`/users/${id}`, updateData);
+    
+    return {
+      id: response.data.id,
+      email: response.data.email,
+      name: response.data.name,
+      role: response.data.role,
+      avatar: response.data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(response.data.name)}&background=${response.data.role === 'ADMIN' ? 'f59e0b' : '6366f1'}&color=fff`
+    };
+  },
+
   deleteUser: async (id: string) => {
-    throw new Error('Delete user not implemented in backend');
+    await axiosInstance.delete(`/users/${id}`);
+    return { status: 'deleted', id };
   },
 
   createBooking: async (data: any, userId: string, userName: string): Promise<Booking> => {
@@ -219,5 +242,21 @@ export const api = {
   deleteBooking: async (id: string) => {
     await axiosInstance.delete(`/bookings/${id}`);
     return { status: "deleted", id };
+  },
+
+  // Cleanup Management
+  getCleanupStatus: async () => {
+    const response = await axiosInstance.get('/admin/cleanup/status');
+    return response.data;
+  },
+
+  toggleCleanup: async (enabled: boolean) => {
+    const response = await axiosInstance.post(`/admin/cleanup/toggle?enabled=${enabled}`);
+    return response.data;
+  },
+
+  runCleanupNow: async () => {
+    const response = await axiosInstance.post('/admin/cleanup/run-now');
+    return response.data;
   },
 };

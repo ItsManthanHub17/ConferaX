@@ -18,7 +18,73 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ bookings, onApprove, onReject, onCancel, onLogout, onNavigate, logs }) => {
   const pendingRequests = bookings.filter(b => b.status === BookingStatus.PENDING);
   const activeBookings = bookings.filter(b => b.status === BookingStatus.APPROVED);
-  const [activeTab, setActiveTab] = useState<'queue' | 'active' | 'logs'>('queue');
+  const [activeTab, setActiveTab] = useState<'queue' | 'active' | 'logs' | 'cleanup'>('queue');
+  const [cleanupStatus, setCleanupStatus] = useState<any>(null);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+
+  // Load cleanup status
+  React.useEffect(() => {
+    if (activeTab === 'cleanup') {
+      loadCleanupStatus();
+    }
+  }, [activeTab]);
+
+  const loadCleanupStatus = async () => {
+    try {
+      const response = await fetch('/api/v1/admin/cleanup/status', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('cygnet_auth_token_raw')}`
+        }
+      });
+      const data = await response.json();
+      setCleanupStatus(data);
+    } catch (error) {
+      console.error('Failed to load cleanup status:', error);
+    }
+  };
+
+  const handleToggleCleanup = async () => {
+    if (!cleanupStatus) return;
+    setCleanupLoading(true);
+    try {
+      const response = await fetch(`/api/v1/admin/cleanup/toggle?enabled=${!cleanupStatus.enabled}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('cygnet_auth_token_raw')}`
+        }
+      });
+      const data = await response.json();
+      setCleanupStatus(data);
+    } catch (error) {
+      console.error('Failed to toggle cleanup:', error);
+      alert('Failed to toggle cleanup');
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
+  const handleRunCleanupNow = async () => {
+    if (!confirm('Run cleanup now? This will delete all audit logs older than ' + cleanupStatus?.retention_days + ' days.')) {
+      return;
+    }
+    setCleanupLoading(true);
+    try {
+      const response = await fetch('/api/v1/admin/cleanup/run-now', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('cygnet_auth_token_raw')}`
+        }
+      });
+      const data = await response.json();
+      alert(`Cleanup completed! Deleted ${data.result.total} records:\n- Approved: ${data.result.approved}\n- Rejected: ${data.result.rejected}\n- Cancelled: ${data.result.cancelled}`);
+      await loadCleanupStatus();
+    } catch (error) {
+      console.error('Failed to run cleanup:', error);
+      alert('Failed to run cleanup');
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
 
   const handleDecline = (id: string) => {
     const reason = window.prompt("System Rejection: State Cause", "Asset Conflict / Policy Override");
@@ -70,13 +136,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ bookings, onApprove, on
 
         <div className="space-y-12">
           <div className="flex bg-[#1a1a1a] p-1.5 rounded-2xl border border-white/10 w-fit shadow-lg">
-             {['queue', 'active', 'logs'].map(tab => (
+             {['queue', 'active', 'logs', 'cleanup'].map(tab => (
                <button 
                  key={tab}
                  onClick={() => setActiveTab(tab as any)} 
                  className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-[#f59e0b] text-black shadow-xl shadow-amber-500/20' : 'text-white/40 hover:text-white'}`}
                >
-                 {tab === 'queue' ? 'Validation Queue' : tab === 'active' ? 'Operational Streams' : 'Telemetry Data'}
+                 {tab === 'queue' ? 'Validation Queue' : tab === 'active' ? 'Operational Streams' : tab === 'logs' ? 'Telemetry Data' : 'Auto-Cleanup'}
                </button>
              ))}
           </div>
@@ -186,7 +252,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ bookings, onApprove, on
                    </>
                  )}
               </div>
-            ) : (
+            ) : activeTab === 'logs' ? (
               <div className="p-12 space-y-6 max-h-[600px] overflow-y-auto font-mono text-[11px]">
                 {logs.map((log, i) => (
                   <div key={i} className="flex space-x-10 border-b border-white/5 pb-6 items-start">
@@ -194,6 +260,75 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ bookings, onApprove, on
                     <span className="text-white/50 tracking-tight uppercase leading-relaxed">{log.message}</span>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="p-16 space-y-16">
+                <div className="space-y-6">
+                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-[#f59e0b] amber-glow-text">Automated Maintenance</p>
+                  <h2 className="text-4xl font-black text-white tracking-tight">Audit Log Cleanup System</h2>
+                  <p className="text-white/40 text-sm max-w-2xl">Automatically removes old audit logs to maintain database performance. Deletes only processed bookings (Approved, Rejected, Cancelled) while preserving pending requests.</p>
+                </div>
+
+                {cleanupStatus ? (
+                  <div className="space-y-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                      <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">System Status</p>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-3 h-3 rounded-full ${cleanupStatus.enabled ? 'bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
+                          <p className={`text-2xl font-black ${cleanupStatus.enabled ? 'text-emerald-500' : 'text-red-500'}`}>{cleanupStatus.enabled ? 'ACTIVE' : 'DISABLED'}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Retention Period</p>
+                        <p className="text-3xl font-black text-white">{cleanupStatus.retention_days} <span className="text-lg text-white/40">days</span></p>
+                      </div>
+
+                      <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Schedule</p>
+                        <p className="text-3xl font-black text-white">{String(cleanupStatus.cleanup_hour).padStart(2, '0')}:00 <span className="text-lg text-white/40">daily</span></p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-6">
+                      <button 
+                        onClick={handleToggleCleanup}
+                        disabled={cleanupLoading}
+                        className={`px-12 py-5 rounded-2xl font-black uppercase text-[11px] tracking-widest transition-all ${cleanupStatus.enabled ? 'bg-red-600/20 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white' : 'bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white'} ${cleanupLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {cleanupLoading ? 'Processing...' : cleanupStatus.enabled ? 'Disable Cleanup' : 'Enable Cleanup'}
+                      </button>
+
+                      <button 
+                        onClick={handleRunCleanupNow}
+                        disabled={cleanupLoading}
+                        className={`px-12 py-5 bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/20 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-[#f59e0b] hover:text-black transition-all ${cleanupLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {cleanupLoading ? 'Running...' : 'Run Cleanup Now'}
+                      </button>
+                    </div>
+
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-8">
+                      <div className="flex gap-4 items-start">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-amber-500 text-sm">⚠</span>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Important Notice</p>
+                          <p className="text-white/60 text-sm leading-relaxed">
+                            Cleanup will delete bookings with status <strong className="text-white">Approved</strong>, <strong className="text-white">Rejected</strong>, or <strong className="text-white">Cancelled</strong> that are older than {cleanupStatus.retention_days} days. 
+                            <strong className="text-emerald-500"> Pending bookings are always preserved</strong> regardless of age.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-20 text-center">
+                    <div className="animate-pulse text-white/20 text-2xl font-black uppercase tracking-tighter">Loading configuration...</div>
+                  </div>
+                )}
               </div>
             )}
           </section>
