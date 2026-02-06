@@ -48,6 +48,21 @@ class UserService:
         db.refresh(user)
         return user
 
+    @staticmethod
+    def get_all(db: Session, skip: int = 0, limit: int = 100):
+        """Get all users with pagination."""
+        return db.query(User).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def delete(db: Session, user_id: str) -> bool:
+        """Delete a user by ID."""
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return False
+        db.delete(user)
+        db.commit()
+        return True
+
     # Example of a method that needs AuthService (use local import)
     @staticmethod
     def some_auth_related_method(db: Session, token: str):

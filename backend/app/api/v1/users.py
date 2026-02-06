@@ -75,6 +75,22 @@ def update_my_profile(
     return updated_user
 
 
+@router.get("/", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
+def get_all_users(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all users (Admin only).
+    
+    Requires admin authentication.
+    """
+    users = UserService.get_all(db, skip=skip, limit=limit)
+    return users
+
+
 @router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 def get_user(
     user_id: str,
@@ -96,3 +112,46 @@ def get_user(
         raise ForbiddenException("Access denied")
     
     return user
+
+
+@router.put("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
+def update_user(
+    user_id: str,
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update any user by ID (Admin only).
+    
+    Requires admin authentication.
+    """
+    user = UserService.update(db, user_id, user_data)
+    
+    if not user:
+        raise NotFoundException("User not found")
+    
+    return user
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: str,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a user by ID (Admin only).
+    
+    Requires admin authentication.
+    """
+    # Prevent admin from deleting themselves
+    if user_id == current_user.id:
+        raise BadRequestException("Cannot delete your own account")
+    
+    success = UserService.delete(db, user_id)
+    
+    if not success:
+        raise NotFoundException("User not found")
+    
+    return None
