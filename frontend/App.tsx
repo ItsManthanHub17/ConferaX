@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [systemLogs, setSystemLogs] = useState<{timestamp: string, message: string}[]>([]);
 
   const addLog = (message: string) => {
@@ -114,11 +115,12 @@ const App: React.FC = () => {
     updateBookingState(id, { status: BookingStatus.REJECTED, notes: reason });
   };
 
-  const navigateToBookingForm = (room: Room | null, booking: Booking | null = null, date: string | null = null) => {
+  const navigateToBookingForm = (room: Room | null, booking: Booking | null = null, date: string | null = null, time: string | null = null) => {
     const resolvedRoom = room ? rooms.find(r => r.id === room.id) || room : null;
     setSelectedRoom(resolvedRoom);
     setSelectedBooking(booking);
     setSelectedDate(date);
+    setSelectedTime(time);
     setView('booking-form');
   };
 
@@ -176,7 +178,7 @@ const App: React.FC = () => {
               bookings={bookings}
               activeSubView={userSubView}
               onSetSubView={setUserSubView}
-              onBookRoom={(room, date) => navigateToBookingForm(room, null, date)}
+              onBookRoom={(room, date, time) => navigateToBookingForm(room, null, date, time)}
               onViewBooking={(booking) => {
                 setSelectedBooking(booking);
                 setView('booking-details');
@@ -189,6 +191,7 @@ const App: React.FC = () => {
             <BookingForm 
               room={selectedRoom || rooms[0]} 
               selectedDate={selectedDate}
+              selectedTime={selectedTime}
               existingBooking={selectedBooking}
               onSubmit={createBooking}
               onUpdate={(id, data) => {

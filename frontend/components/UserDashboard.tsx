@@ -11,7 +11,7 @@ interface UserDashboardProps {
   bookings: Booking[];
   activeSubView: string;
   onSetSubView: (view: string) => void;
-  onBookRoom: (room: Room, date: string) => void;
+  onBookRoom: (room: Room, date: string, time?: string) => void;
   onViewBooking: (booking: Booking) => void;
   onLogout: () => void;
 }
@@ -172,7 +172,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                               </div>
                             ) : (
                                 <button 
-                                onClick={() => onBookRoom(room, selectedDate)}
+                                onClick={() => onBookRoom(room, selectedDate, time)}
                                 className="w-full h-full bg-[#151515] rounded-2xl border border-dashed border-white/10 flex items-center justify-center group hover:bg-[#f59e0b]/5 hover:border-[#f59e0b]/40 transition-all"
                               >
                                 <span className="text-[9px] font-black text-white/5 group-hover:text-[#f59e0b] transition-colors">AVAILABLE SLOT</span>
