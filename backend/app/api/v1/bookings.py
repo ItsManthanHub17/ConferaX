@@ -321,12 +321,14 @@ def approve_booking(
 @router.post("/{booking_id}/reject", response_model=BookingResponse, status_code=status.HTTP_200_OK)
 def reject_booking(
     booking_id: str,
-    reason: str = Query(..., description="Rejection reason"),
+    status_update: BookingStatusUpdate,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """
     Reject a booking (Admin only).
+    
+    Accepts rejection reason in request body as 'notes' field.
     
     Requires admin authentication.
     """
@@ -338,9 +340,9 @@ def reject_booking(
     if booking.status != BookingStatusEnum.PENDING:
         raise BadRequestException("Can only reject PENDING bookings")
     
-    # Reject booking
-    status_data = BookingStatusUpdate(status=BookingStatusEnum.REJECTED, notes=reason)
-    rejected_booking = BookingService.update_status(db, booking_id, status_data)
+    # Reject booking with the provided notes
+    reject_data = BookingStatusUpdate(status=BookingStatusEnum.REJECTED, notes=status_update.notes)
+    rejected_booking = BookingService.update_status(db, booking_id, reject_data)
     
     return _to_booking_response(rejected_booking)
 
@@ -372,15 +374,7 @@ def get_booking_conflicts(
         exclude_booking_id=booking_id
     )
     
-    result = []
-    for conflict in conflicts:
-        result.append(BookingResponse(
-            **conflict.__dict__,
-            user_name=conflict.user.name,
-            room_name=conflict.room.name
-        ))
-    
-    return result
+    return [_to_booking_response(conflict) for conflict in conflicts]
 
 
 @router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
