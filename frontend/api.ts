@@ -89,9 +89,9 @@ export const api = {
     return response.data.map((booking: any) => ({
       id: booking.id,
       userId: booking.user_id,
-      userName: booking.user?.name || 'Unknown',
+      userName: booking.user_name || 'Unknown',
       roomId: booking.room_id,
-      roomName: booking.room?.name || 'Unknown Room',
+      roomName: booking.room_name || 'Unknown Room',
       date: booking.date,
       startTime: booking.start_time,
       endTime: booking.end_time,
@@ -196,6 +196,7 @@ export const api = {
       response = await axiosInstance.post(`/bookings/${id}/approve`);
     } else if (updates.status === BookingStatus.REJECTED) {
       response = await axiosInstance.post(`/bookings/${id}/reject`, {
+        status: 'Rejected',
         notes: updates.notes
       });
     } else if (updates.status === BookingStatus.CANCELLED) {
@@ -221,9 +222,9 @@ export const api = {
     return {
       id: booking.id,
       userId: booking.user_id,
-      userName: booking.user?.name || 'Unknown',
+      userName: booking.user_name || 'Unknown',
       roomId: booking.room_id,
-      roomName: booking.room?.name || 'Unknown Room',
+      roomName: booking.room_name || 'Unknown Room',
       date: booking.date,
       startTime: booking.start_time,
       endTime: booking.end_time,

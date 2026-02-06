@@ -16,7 +16,29 @@ router = APIRouter(
 @router.post(
     "/login",
     response_model=TokenResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    summary="User Login",
+    description="Authenticate with email and password to receive JWT tokens",
+    responses={
+        200: {
+            "description": "Login successful",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "token_type": "bearer",
+                        "user": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "email": "admin.user@cygnet.one",
+                            "name": "Admin User",
+                            "role": "ADMIN"
+                        }
+                    }
+                }
+            }
+        },
+        401: {"description": "Invalid credentials"}
+    }
 )
 def login(
     payload: LoginRequest,
