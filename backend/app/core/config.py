@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str = "admin@2026admin"
     ADMIN_NAME: str = "Admin User"
 
+    # Audit Log Cleanup
+    AUDIT_LOG_RETENTION_DAYS: int = 10
+    ENABLE_AUTO_CLEANUP: bool = True
+    CLEANUP_HOUR: int = 2  # Run at 2:00 AM daily
+
     # Pydantic settings - use project root .env
     model_config = SettingsConfigDict(
         env_file=os.path.abspath(
