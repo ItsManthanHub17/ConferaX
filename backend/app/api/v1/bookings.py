@@ -65,14 +65,22 @@ def get_all_bookings(
     """
     Get all bookings with optional filters.
     
-    - Regular users can only see their own bookings
+    - Regular users can see all approved bookings (for global schedule)
+    - Regular users can see their own bookings regardless of status
     - Admins can see all bookings and apply filters
     
     Requires authentication.
     """
-    # If not admin, force filter to current user's bookings only
+    # Regular users can see all approved bookings or their own bookings
+    # This allows them to see the global schedule
     if current_user.role.value != "ADMIN":
-        user_id = current_user.id
+        # If no specific user_id filter provided, only show approved bookings for schedule view
+        if user_id is None:
+            status = BookingStatusEnum.APPROVED
+        else:
+            # If filtering by user_id, verify it's their own ID
+            if user_id != current_user.id:
+                user_id = current_user.id
     
     bookings = BookingService.get_all(
         db,
