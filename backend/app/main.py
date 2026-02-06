@@ -1,11 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from sqlalchemy.orm import Session
-from app.variables.database import get_db, engine, Base
 
-from app.variables.database import get_db, engine, Base
-from app.models.models import User
+from app.variables.database import engine, Base
 from app.core.config import settings
 from app.api.v1 import api_router
 
