@@ -173,7 +173,7 @@ export const api = {
       response = await axiosInstance.post(`/bookings/${id}/approve`);
     } else if (updates.status === BookingStatus.REJECTED) {
       response = await axiosInstance.post(`/bookings/${id}/reject`, {
-        status: 'REJECTED',
+        status: 'Rejected',
         notes: updates.notes
       });
     } else if (updates.status === BookingStatus.CANCELLED) {
