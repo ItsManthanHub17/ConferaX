@@ -5,18 +5,25 @@ import { Room, Booking, Priority } from '../types';
 interface BookingFormProps {
   room: Room;
   selectedDate?: string | null;
+  selectedTime?: string | null;
   existingBooking: Booking | null;
   onSubmit: (data: any) => void;
   onUpdate: (id: string, data: any) => void;
   onCancel: () => void;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ room, selectedDate, existingBooking, onSubmit, onUpdate, onCancel }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ room, selectedDate, selectedTime, existingBooking, onSubmit, onUpdate, onCancel }) => {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
+  
+  const calculateEndTime = (start: string) => {
+    const [hours, minutes] = start.split(':').map(Number);
+    const endHours = hours + 1;
+    return `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
 
   const [date, setDate] = useState(existingBooking?.date || selectedDate || getTodayStr());
-  const [startTime, setStartTime] = useState(existingBooking?.startTime || '10:00');
-  const [endTime, setEndTime] = useState(existingBooking?.endTime || '12:00');
+  const [startTime, setStartTime] = useState(existingBooking?.startTime || selectedTime || '10:00');
+  const [endTime, setEndTime] = useState(existingBooking?.endTime || (selectedTime ? calculateEndTime(selectedTime) : '12:00'));
   const [title, setTitle] = useState(existingBooking?.title || '');
   const [attendees, setAttendees] = useState(existingBooking?.attendees?.toString() || '1');
   const [description, setDescription] = useState(existingBooking?.description || '');
