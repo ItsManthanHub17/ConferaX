@@ -28,6 +28,27 @@ const BookingDetailsView: React.FC<BookingDetailsViewProps> = ({
           <span className="mr-3 text-lg">←</span> Back to Overview
         </button>
 
+        {!isOwner && booking.status === BookingStatus.APPROVED && (
+          <div className="mb-10 bg-gradient-to-r from-[#f59e0b] to-amber-600 p-8 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-black/20 rounded-2xl flex items-center justify-center">
+                <span className="text-2xl">⚡</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-black">Slot Occupied</h3>
+                <p className="text-[10px] font-bold text-black/60 uppercase tracking-wider mt-1">Need this time? Submit priority override request</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => onRequestOverride?.(room, booking)}
+              className="w-full md:w-auto px-10 py-4 bg-black text-[#f59e0b] font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-black/90 transition-all shadow-xl"
+            >
+              Request Priority Override
+            </button>
+          </div>
+        )}
+
+
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
           <div className="space-y-3">
             <div className="flex items-center space-x-6">

@@ -162,13 +162,18 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                             {booking ? (
                               <div 
                                 onClick={() => onViewBooking(booking)}
-                                className={`h-full p-4 rounded-2xl flex flex-col justify-center border-l-4 shadow-xl cursor-pointer hover:scale-[1.02] transition-transform ${PRIORITY_SLOT_COLORS[booking.priority]}`}
+                                className={`h-full p-4 rounded-2xl flex flex-col justify-center border-l-4 shadow-xl cursor-pointer hover:scale-[1.02] transition-transform relative group ${PRIORITY_SLOT_COLORS[booking.priority]}`}
                               >
                                 <div className="flex justify-between items-center mb-0.5">
                                   <span className="text-[9px] font-black uppercase tracking-tight truncate">{booking.userName}</span>
                                   {booking.userId === user.id && <span className="text-[7px] bg-white/20 px-1 rounded uppercase">MINE</span>}
                                 </div>
                                 <span className="text-[7px] font-bold uppercase opacity-70 truncate">{booking.title}</span>
+                                {booking.userId !== user.id && (
+                                  <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-[8px] font-black text-[#f59e0b] uppercase tracking-widest">CLICK TO OVERRIDE</span>
+                                  </div>
+                                )}
                               </div>
                             ) : (
                                 <button 
