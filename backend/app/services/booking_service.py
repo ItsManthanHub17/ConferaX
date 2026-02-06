@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 from typing import Optional, List
 from datetime import datetime, date, time
@@ -12,8 +12,11 @@ class BookingService:
     
     @staticmethod
     def get_by_id(db: Session, booking_id: str) -> Optional[Booking]:
-        """Get booking by ID."""
-        return db.query(Booking).filter(Booking.id == booking_id).first()
+        """Get booking by ID with user and room loaded."""
+        return db.query(Booking)\
+            .options(joinedload(Booking.user), joinedload(Booking.room))\
+            .filter(Booking.id == booking_id)\
+            .first()
     
     @staticmethod
     def get_all(
@@ -26,8 +29,11 @@ class BookingService:
         date_from: Optional[date] = None,
         date_to: Optional[date] = None
     ) -> List[Booking]:
-        """Get all bookings with optional filters."""
-        query = db.query(Booking)
+        """Get all bookings with optional filters and eagerly load relationships."""
+        query = db.query(Booking).options(
+            joinedload(Booking.user),
+            joinedload(Booking.room)
+        )
         
         if user_id:
             query = query.filter(Booking.user_id == user_id)
