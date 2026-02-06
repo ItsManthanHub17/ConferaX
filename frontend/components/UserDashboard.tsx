@@ -161,8 +161,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                           <div key={room.id} className="h-full">
                             {booking ? (
                               <div 
-                                onClick={booking.userId === user.id ? () => onViewBooking(booking) : undefined}
-                                className={`h-full p-4 rounded-2xl flex flex-col justify-center border-l-4 shadow-xl ${booking.userId === user.id ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-not-allowed opacity-60'} transition-transform relative group ${PRIORITY_SLOT_COLORS[booking.priority]}`}
+                                onClick={() => booking.userId === user.id ? onViewBooking(booking) : onBookRoom(room, selectedDate, time)}
+                                className={`h-full p-4 rounded-2xl flex flex-col justify-center border-l-4 shadow-xl cursor-pointer hover:scale-[1.02] transition-transform relative group ${PRIORITY_SLOT_COLORS[booking.priority]}`}
                               >
                                 <div className="flex justify-between items-center mb-0.5">
                                   <span className="text-[9px] font-black uppercase tracking-tight truncate">{booking.userName}</span>
@@ -170,8 +170,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                                 </div>
                                 <span className="text-[7px] font-bold uppercase opacity-70 truncate">{booking.title}</span>
                                 {booking.userId !== user.id && (
-                                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">🔒 RESERVED</span>
+                                  <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-[8px] font-black text-[#f59e0b] uppercase tracking-widest">REQUEST OVERRIDE</span>
                                   </div>
                                 )}
                               </div>

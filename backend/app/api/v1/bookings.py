@@ -152,7 +152,7 @@ def create_booking(
     if booking_data.end_time <= booking_data.start_time:
         raise BadRequestException("End time must be after start time")
     
-    # Check for conflicts with approved bookings
+    # Check for conflicts with approved bookings (informational only)
     conflicts = BookingService.get_conflicting_bookings(
         db,
         booking_data.room_id,
@@ -161,21 +161,16 @@ def create_booking(
         booking_data.end_time
     )
     
-    if conflicts:
-        conflict_details = [
-            {
-                "user": c.user.name,
-                "time": f"{c.start_time} - {c.end_time}"
-            }
-            for c in conflicts
-        ]
-        raise ConflictException(
-            f"This time slot conflicts with {len(conflicts)} already approved booking(s). "
-            f"Please choose a different time or room. Conflicts: {conflict_details}"
-        )
-    
-    # Create booking
+    # Create booking as PENDING - admin will resolve conflicts
+    # Note: conflicts are allowed so users can request priority overrides
     booking = BookingService.create(db, current_user.id, booking_data)
+    
+    # If there are conflicts, add a note for admin review
+    if conflicts:
+        conflict_info = ", ".join([f"{c.user.name} ({c.priority.value})" for c in conflicts])
+        booking.notes = f"Override request - Conflicts with: {conflict_info}"
+        db.commit()
+        db.refresh(booking)
     
     return _to_booking_response(booking)
 
