@@ -209,11 +209,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
               <div className="vibrant-card p-12 rounded-[2.5rem] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#f59e0b]/10 blur-[60px] group-hover:bg-[#f59e0b]/20 transition-all"></div>
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Aggregate Capacity</p>
-                <p className="text-6xl font-black text-[#f59e0b] amber-glow-text">144<span className="text-xl text-white/10 ml-2">Pax</span></p>
+                <p className="text-6xl font-black text-[#f59e0b] amber-glow-text">{rooms.reduce((sum, r) => sum + r.capacity, 0)}<span className="text-xl text-white/10 ml-2">Pax</span></p>
               </div>
               <div className="btn-amber p-12 rounded-[2.5rem] shadow-2xl flex flex-col justify-center">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/40 mb-4">Prime Asset</p>
-                <p className="text-4xl font-black text-black">Neural HUB</p>
+                <p className="text-4xl font-black text-black">{rooms.reduce((max, r) => r.capacity > max.capacity ? r : max, rooms[0])?.name || 'N/A'}</p>
               </div>
               <div className="vibrant-card p-12 rounded-[2.5rem] flex flex-col justify-center border-l-4 border-l-[#f59e0b]">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Historical Data</p>
