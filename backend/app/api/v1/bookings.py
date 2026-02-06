@@ -15,6 +15,7 @@ from app.services.booking_service import BookingService
 from app.services.room_service import RoomService
 from app.api.deps import get_current_active_user, get_current_admin_user
 from app.models.user import User
+from app.models.booking import Booking
 from app.utils.exceptions import (
     NotFoundException,
     BadRequestException,
@@ -24,6 +25,29 @@ from app.utils.exceptions import (
 from app.core.config import settings
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
+
+
+def _to_booking_response(booking: Booking) -> BookingResponse:
+    """Convert Booking model to BookingResponse schema."""
+    return BookingResponse(
+        id=booking.id,
+        user_id=booking.user_id,
+        room_id=booking.room_id,
+        date=booking.date,
+        start_time=booking.start_time,
+        end_time=booking.end_time,
+        title=booking.title,
+        attendees=booking.attendees,
+        description=booking.description,
+        priority=booking.priority,
+        equipment=booking.equipment,
+        status=booking.status,
+        notes=booking.notes,
+        created_at=booking.created_at,
+        updated_at=booking.updated_at,
+        user_name=booking.user.name if booking.user else "Unknown",
+        room_name=booking.room.name if booking.room else "Unknown"
+    )
 
 
 @router.get("", response_model=List[BookingResponse], status_code=status.HTTP_200_OK)
@@ -62,16 +86,7 @@ def get_all_bookings(
     )
     
     # Enrich with user_name and room_name
-    result = []
-    for booking in bookings:
-        booking_dict = {
-            **booking.__dict__,
-            "user_name": booking.user.name,
-            "room_name": booking.room.name
-        }
-        result.append(BookingResponse(**booking_dict))
-    
-    return result
+    return [_to_booking_response(booking) for booking in bookings]
 
 
 @router.get("/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -97,11 +112,7 @@ def get_booking(
     if booking.user_id != current_user.id and current_user.role.value != "ADMIN":
         raise ForbiddenException("Access denied")
     
-    return BookingResponse(
-        **booking.__dict__,
-        user_name=booking.user.name,
-        room_name=booking.room.name
-    )
+    return _to_booking_response(booking)
 
 
 @router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
@@ -136,11 +147,7 @@ def create_booking(
     # Create booking
     booking = BookingService.create(db, current_user.id, booking_data)
     
-    return BookingResponse(
-        **booking.__dict__,
-        user_name=current_user.name,
-        room_name=room.name
-    )
+    return _to_booking_response(booking)
 
 
 @router.put("/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -184,11 +191,7 @@ def update_booking(
     if not updated_booking:
         raise NotFoundException("Booking not found")
     
-    return BookingResponse(
-        **updated_booking.__dict__,
-        user_name=updated_booking.user.name,
-        room_name=updated_booking.room.name
-    )
+    return _to_booking_response(updated_booking)
 
 
 @router.patch("/{booking_id}/cancel", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -226,11 +229,7 @@ def cancel_booking(
     # Cancel booking
     cancelled_booking = BookingService.cancel(db, booking_id, notes)
     
-    return BookingResponse(
-        **cancelled_booking.__dict__,
-        user_name=cancelled_booking.user.name,
-        room_name=cancelled_booking.room.name
-    )
+    return _to_booking_response(cancelled_booking)
 
 
 @router.patch("/{booking_id}/status", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -260,11 +259,7 @@ def update_booking_status(
     # Update status
     updated_booking = BookingService.update_status(db, booking_id, status_data)
     
-    return BookingResponse(
-        **updated_booking.__dict__,
-        user_name=updated_booking.user.name,
-        room_name=updated_booking.room.name
-    )
+    return _to_booking_response(updated_booking)
 
 
 @router.post("/{booking_id}/approve", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -320,11 +315,7 @@ def approve_booking(
         db, booking_id, cancel_conflicts
     )
     
-    return BookingResponse(
-        **approved_booking.__dict__,
-        user_name=approved_booking.user.name,
-        room_name=approved_booking.room.name
-    )
+    return _to_booking_response(approved_booking)
 
 
 @router.post("/{booking_id}/reject", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -351,11 +342,7 @@ def reject_booking(
     status_data = BookingStatusUpdate(status=BookingStatusEnum.REJECTED, notes=reason)
     rejected_booking = BookingService.update_status(db, booking_id, status_data)
     
-    return BookingResponse(
-        **rejected_booking.__dict__,
-        user_name=rejected_booking.user.name,
-        room_name=rejected_booking.room.name
-    )
+    return _to_booking_response(rejected_booking)
 
 
 @router.get("/{booking_id}/conflicts", response_model=List[BookingResponse], status_code=status.HTTP_200_OK)
