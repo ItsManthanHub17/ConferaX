@@ -7,6 +7,7 @@ from app.variables.database import engine, Base
 from app.core.config import settings
 from app.api.v1 import api_router
 from app.api.deps import get_db
+from app.services.scheduler_service import SchedulerService
 
 
 # ---------------------------
@@ -25,11 +26,17 @@ async def lifespan(app: FastAPI):
     
     # Create tables (only once)
     Base.metadata.create_all(bind=engine)
+    
+    # Start scheduler for automated tasks
+    if settings.ENABLE_AUTO_CLEANUP:
+        SchedulerService.start_scheduler()
+        print(f"🧹 Cleanup scheduler started (retention: {settings.AUDIT_LOG_RETENTION_DAYS} days)")
 
     yield
 
     # Shutdown
     print("👋 Shutting down Smart RoomBook API...")
+    SchedulerService.shutdown_scheduler()
 
 
 # ---------------------------
