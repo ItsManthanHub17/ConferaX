@@ -12,6 +12,7 @@ A full-stack conference room booking application built with FastAPI, React, and 
 - [API Documentation](#api-documentation)
 - [Testing](#testing)
 - [Sample Credentials](#sample-credentials)
+- [Automated Cleanup System](#automated-cleanup-system)
 
 ## Overview
 
@@ -25,6 +26,7 @@ ConferaX is a conference room booking system that allows users to browse availab
 - Booking creation with time conflict validation
 - User profile management
 - Admin dashboard for system overview
+- Automated audit log cleanup system
 
 ## Features
 
@@ -52,6 +54,21 @@ ConferaX is a conference room booking system that allows users to browse availab
 - Manage users (create, update, delete)
 - Manage rooms
 - System-wide overview
+- Automated audit log cleanup system
+
+### Automated Cleanup System
+- **Scheduled Cleanup**: Automatically runs daily at 2:00 AM
+- **Retention Policy**: Keeps audit logs for 10 days (configurable)
+- **Smart Deletion**: Only deletes processed bookings (APPROVED, REJECTED, CANCELLED)
+- **Protected Data**: PENDING bookings are never deleted
+- **Admin Control**: 
+  - Enable/disable automatic cleanup
+  - Manual cleanup trigger anytime
+  - View cleanup status and configuration
+- **Background Processing**: Uses APScheduler for reliable task execution
+- **Configuration**: Adjustable via environment variables (retention days, schedule, enable/disable)
+
+See [CLEANUP_SYSTEM.md](docs/CLEANUP_SYSTEM.md) for detailed documentation.
 
 ## Technology Stack
 
@@ -197,6 +214,11 @@ DATABASE_URL=postgresql://user:password@localhost:5432/conference_db
 SECRET_KEY=your-secret-key-here
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Automated Cleanup Configuration (Optional)
+AUDIT_LOG_RETENTION_DAYS=10
+ENABLE_AUTO_CLEANUP=true
+CLEANUP_HOUR=2
 ```
 
 ## API Documentation
@@ -260,6 +282,22 @@ Example booking creation:
   "room_id": "uuid",
   "start_time": "2026-02-10T09:00:00",
   "end_time": "2026-02-10T11:00:00"
+}
+```
+
+### Admin Cleanup Endpoints
+
+- **GET /admin/cleanup/status** - Get cleanup configuration and status (admin only)
+- **POST /admin/cleanup/toggle?enabled=true** - Enable/disable automatic cleanup (admin only)
+- **POST /admin/cleanup/run-now** - Manually trigger cleanup immediately (admin only)
+
+Cleanup status response:
+```json
+{
+  "enabled": true,
+  "retention_days": 10,
+  "cleanup_hour": 2,
+  "auto_cleanup_enabled": true
 }
 ```
 
@@ -335,6 +373,7 @@ Regular users can:
 - [TESTING.md](TESTING.md) - Complete testing documentation
 - [DOCKER_SETUP.md](DOCKER_SETUP.md) - Docker setup guide
 - [GIT_WORKFLOW.md](GIT_WORKFLOW.md) - Git workflow and branching strategy
+- [CLEANUP_SYSTEM.md](docs/CLEANUP_SYSTEM.md) - Automated cleanup system documentation
 
 ## Author
 
